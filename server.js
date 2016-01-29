@@ -3,7 +3,6 @@ import Resource from 'koa-resource-router'
 import koaBody from 'koa-better-body'
 import knex from 'koa-knex'
 import mount from 'koa-mount'
-import sqlite3 from 'sqlite3'
 import path from 'path'
 
 const PORT = 4000
@@ -25,7 +24,7 @@ app.use(knex({
   }
 }))
 
-const users = new Resource('players', {
+const players = new Resource('players', {
   // GET /players
   index: function *(next) {
     // this.body = yield { players: this.knex('players') }
@@ -38,7 +37,7 @@ const users = new Resource('players', {
       // One method is to use knex to build the query for you
       const res = yield this.knex('players').returning('*').insert({
         name: this.request.body.fields.player.name,
-        email: this.request.body.fields.player.email,
+        high_score: this.request.body.fields.player.high_score,
         created_at: new Date(),
         updated_at: new Date()
       })
@@ -81,7 +80,7 @@ const users = new Resource('players', {
   }
 })
 
-app.use(mount('/api/v1', player.middleware()))
+app.use(mount('/api/v1', players.middleware()))
 
 // Start the application up on port PORT
 app.listen(PORT, () => {
