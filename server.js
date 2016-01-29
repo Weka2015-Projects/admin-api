@@ -28,7 +28,7 @@ const players = new Resource('players', {
   // GET /players
   index: function *(next) {
     // this.body = yield { players: this.knex('players') }
-    this.body = { message: "This will list all players." }
+    this.body =  yield { players: this.knex('players') }
   },
 
   // POST /players
@@ -47,6 +47,7 @@ const players = new Resource('players', {
       this.set('Location', `/players/${res[0].id}`)
       this.body = { player: res[0] }
     } catch (e) {
+      console.log('error', e)
       this.status = 422
     }
   },
@@ -54,10 +55,8 @@ const players = new Resource('players', {
   // GET /players/:id
   show: function *(next) {
     let id = this.params.player
-
     // You can also write the SQL by hand and just use knex to send it
-    let res = yield this.knex.raw('select * from players where id = ?', id)
-
+    let res = yield this.knex.raw('select * from players where id = ?', [id])
     if (res.rows.length === 1) {
       this.body = { player: res.rows[0] }
     } else {
