@@ -134,7 +134,7 @@ const games = new Resource('games', {
         updated_at: new Date()
       })
     if (res) {
-      this.body = { player: res[0] }
+      this.body = { game: res[0] }
     } else {
       this.status = 404
     }
@@ -149,10 +149,78 @@ const games = new Resource('games', {
   }
 })
 
+const plays = new Resource('plays', {
+  // GET /players
+  index: function *(next) {
+    // this.body = yield { players: this.knex('players') }
+    this.body =  yield { plays: this.knex('plays') }
+  },
+
+  // POST /players
+  create: function *(next) {
+    try {
+      // One method is to use knex to build the query for you
+      const res = yield this.knex('plays').returning('*').insert({
+        player_id: this.request.body.fields.play.player_id,
+        game_id: this.request.body.fields.play.game_id,
+        name: this.request.body.fields.play.name,
+        score: this.request.body.fields.play.score,
+        created_at: new Date(),
+        updated_at: new Date()
+      })
+      this.type = 'application/json'
+      this.status = 201
+      this.set('Location', `/plays/${res[0].id}`)
+      this.body = { plays: res[0] }
+    } catch (e) {
+      console.log('error', e)
+      this.status = 422
+    }
+  },
+
+  // GET /players/:id
+  show: function *(next) {
+    let id = this.params.play
+    const res = yield this.knex.raw('SELECT * FROM PLAYS WHERE ID = ?', [id])
+    if (res.rows.length === 1) {
+      this.body = { plays: res.rows[0] }
+    } else {
+      this.status = 404
+    }
+  },
+
+  // PUT /players/:id
+  update: function *(next) {
+    const id = this.params.play
+    const prevObj = yield this.knex.raw('SELECT * FROM PLAYS WHERE ID = ?', [id]) 
+    const res = yield this.knex('plays').returning('*').where('id', id).update({
+        player_id: this.request.body.fields.play.player_id ||  prevObj.rows[0].player_id,
+        game_id: this.request.body.fields.play.game_id ||  prevObj.rows[0].game_id,
+        score: this.request.body.fields.play.score ||  prevObj.rows[0].score,
+        name: this.request.body.fields.play.name ||  prevObj.rows[0].name,
+        created_at: new Date(),
+        updated_at: new Date()
+      })
+    if (res) {
+      this.body = { player: res[0] }
+    } else {
+      this.status = 404
+    }
+  },
+
+  // DELETE /players/:id
+  destroy: function *(next) {
+    const id = this.params.play
+    const res = yield this.knex('plays').returning('*').where('id', id).del()
+    console.log(res)
+    this.body = { message: `Deleted play with a game id of ${res[0].game_id}, a player id of ${res[0].player_id} and id of ${id}` }
+  }
+})
+
 
 app.use(mount('/api/v1', players.middleware()))
 app.use(mount('/api/v1', games.middleware()))
-
+app.use(mount('/api/v1', plays.middleware()))
 // Start the application up on port PORT
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT} . . .`)
