@@ -54,8 +54,7 @@ const players = new Resource('players', {
 
   // GET /players/:id
   show: function *(next) {
-    let id = this.params.player
-    // You can also write the SQL by hand and just use knex to send it
+    const id = this.params.player
     const res = yield this.knex.raw('SELECT * FROM PLAYERS WHERE ID = ?', [id])
     if (res.rows.length === 1) {
       this.body = { player: res.rows[0] }
@@ -89,16 +88,14 @@ const players = new Resource('players', {
 })
 
 const games = new Resource('games', {
-  // GET /players
+  // GET /games
   index: function *(next) {
-    // this.body = yield { players: this.knex('players') }
     this.body =  yield { games: this.knex('games') }
   },
 
-  // POST /players
+  // POST /games
   create: function *(next) {
     try {
-      // One method is to use knex to build the query for you
       const res = yield this.knex('games').returning('*').insert({
         content: this.request.body.fields.game.content,
         created_at: new Date(),
@@ -114,9 +111,9 @@ const games = new Resource('games', {
     }
   },
 
-  // GET /players/:id
+  // GET /games/:id
   show: function *(next) {
-    let id = this.params.game
+    const id = this.params.game
     const res = yield this.knex.raw('SELECT * FROM GAMES WHERE ID = ?', [id])
     if (res.rows.length === 1) {
       this.body = { games: res.rows[0] }
@@ -125,7 +122,7 @@ const games = new Resource('games', {
     }
   },
 
-  // PUT /players/:id
+  // PUT /games/:id
   update: function *(next) {
     const id = this.params.game
     const prevObj = yield this.knex.raw('SELECT * FROM GAMES WHERE ID = ?', [id]) 
@@ -140,7 +137,7 @@ const games = new Resource('games', {
     }
   },
 
-  // DELETE /players/:id
+  // DELETE /games/:id
   destroy: function *(next) {
     const id = this.params.game
     const res = yield this.knex('games').returning('*').where('id', id).del()
@@ -150,16 +147,15 @@ const games = new Resource('games', {
 })
 
 const plays = new Resource('plays', {
+
   // GET /players
   index: function *(next) {
-    // this.body = yield { players: this.knex('players') }
     this.body =  yield { plays: this.knex('plays') }
   },
 
   // POST /players
   create: function *(next) {
     try {
-      // One method is to use knex to build the query for you
       const res = yield this.knex('plays').returning('*').insert({
         player_id: this.request.body.fields.play.player_id,
         game_id: this.request.body.fields.play.game_id,
@@ -178,9 +174,9 @@ const plays = new Resource('plays', {
     }
   },
 
-  // GET /players/:id
+  // GET /plays/:id
   show: function *(next) {
-    let id = this.params.play
+    const id = this.params.play
     const res = yield this.knex.raw('SELECT * FROM PLAYS WHERE ID = ?', [id])
     if (res.rows.length === 1) {
       this.body = { plays: res.rows[0] }
@@ -189,7 +185,7 @@ const plays = new Resource('plays', {
     }
   },
 
-  // PUT /players/:id
+  // PUT /plays/:id
   update: function *(next) {
     const id = this.params.play
     const prevObj = yield this.knex.raw('SELECT * FROM PLAYS WHERE ID = ?', [id]) 
@@ -208,7 +204,7 @@ const plays = new Resource('plays', {
     }
   },
 
-  // DELETE /players/:id
+  // DELETE /plays/:id
   destroy: function *(next) {
     const id = this.params.play
     const res = yield this.knex('plays').returning('*').where('id', id).del()
@@ -221,7 +217,7 @@ const plays = new Resource('plays', {
 app.use(mount('/api/v1', players.middleware()))
 app.use(mount('/api/v1', games.middleware()))
 app.use(mount('/api/v1', plays.middleware()))
-// Start the application up on port PORT
+
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT} . . .`)
 })
