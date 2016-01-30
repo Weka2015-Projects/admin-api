@@ -56,7 +56,7 @@ const players = new Resource('players', {
   show: function *(next) {
     let id = this.params.player
     // You can also write the SQL by hand and just use knex to send it
-    let res = yield this.knex.raw('select * from players where id = ?', [id])
+    const res = yield this.knex.raw('SELECT * FROM PLAYERS WHERE ID = ?', [id])
     if (res.rows.length === 1) {
       this.body = { player: res.rows[0] }
     } else {
@@ -66,16 +66,26 @@ const players = new Resource('players', {
 
   // PUT /players/:id
   update: function *(next) {
-    let id = this.params.player
-
-    this.body = { message: `Update player #${id}` }
+    const id = this.params.player
+    const prevObj = yield this.knex.raw('SELECT * FROM PLAYERS WHERE ID = ?', [id]) 
+    const res = yield this.knex('players').returning('*').where('id', id).update({
+        name: this.request.body.fields.player.name || prevObj.rows[0].name,
+        high_score: this.request.body.fields.player.high_score || prevObj.rows[0].high_score,
+        updated_at: new Date()
+      })
+    if (res) {
+      this.body = { player: res[0] }
+    } else {
+      this.status = 404
+    }
   },
 
   // DELETE /players/:id
   destroy: function *(next) {
-    let id = this.params.player
-
-    this.body = { message: `Delete player #${id}` }
+    const id = this.params.player
+    const prevObj = yield this.knex.raw('SELECT * FROM PLAYERS WHERE ID = ?', [id]) 
+    const res = yield this.knex('players').returning('*').where('id', id).del()
+    this.body = { message: `Deleted player with name of ${prevObj.rows[0].name} and id of ${id}` }
   }
 })
 
